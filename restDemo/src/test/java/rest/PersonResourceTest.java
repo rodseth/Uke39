@@ -1,5 +1,6 @@
 package rest;
 
+import entities.Address;
 import entities.Person;
 import utils.EMF_Creator;
 import io.restassured.RestAssured;
@@ -62,8 +63,8 @@ public class PersonResourceTest {
     @BeforeEach
     public void setUp() {
         EntityManager em = emf.createEntityManager();
-        r1 = new Person("Mari", "Haugen","97030434");
-        r2 = new Person("Frank", "vonSausage", "35535611");
+        r1 = new Person("Mari", "Haugen","97030434", new Address("Enevej 2", "Nexø", "3730"));
+        r2 = new Person("Frank", "vonSausage", "35535611", new Address("Trevej 1", "Nexø", "3730"));
         try {
             em.getTransaction().begin();
             em.createNamedQuery("Person.deleteAllRows").executeUpdate();

@@ -39,7 +39,6 @@ public class Address implements Serializable {
         this.city = city;
     }
     
-    
 
     public Long getA_id() {
         return a_id;

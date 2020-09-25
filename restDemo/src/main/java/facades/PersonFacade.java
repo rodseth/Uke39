@@ -2,6 +2,7 @@ package facades;
 
 import dto.PersonDTO;
 import dto.PersonsDTO;
+import entities.Address;
 import entities.Person;
 import exceptions.MissingInputException;
 import exceptions.PersonNotFoundException;
@@ -9,7 +10,7 @@ import java.util.Date;
 import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
+import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 
 /**
@@ -55,23 +56,36 @@ public class PersonFacade implements IPersonFacade {
     }
 
     @Override
-    public PersonDTO addPerson(String fName, String lName, String phone) throws MissingInputException {
+    public PersonDTO addPerson(String fName, String lName, String phone, String street, String city, String zip) throws MissingInputException {
         if((fName.length()== 0) || (lName.length()== 0) || (phone.length() == 0)){
         throw new MissingInputException("You have not filled out all det fields requierd for adding a person.");
     }
 
         EntityManager em = getEntityManager();
         Person person = new Person(fName, lName, phone);
+        //Address address = new Address(street, city, zip);
+        //person.setAddress(address);
         try {
             em.getTransaction().begin();
+            Query query = em.createQuery("SELECT a From Address a WHERE a.street = :street AND a.city = :city AND a.zip = :zip");
+            query.setParameter ("street", street);
+            query.setParameter ("city", city);
+            query.setParameter ("zip", zip);
+            List<Address> addresses = query.getResultList();
+            if (addresses.size() > 0) {
+                person.setAddress (addresses.get (0));
+            } else {
+                person.setAddress(new Address (street, city, zip));
+            }
             em.persist(person);
             em.getTransaction().commit();
-            PersonDTO pDTO = new PersonDTO(person);
-            return pDTO;
+            
         } finally {
             em.close();
 
         }
+        
+            return new PersonDTO(person);
 
     }
 
@@ -80,7 +94,7 @@ public class PersonFacade implements IPersonFacade {
         EntityManager em = getEntityManager();
         Person p = em.find(Person.class, id);
         if (p == null) {
-            throw new PersonNotFoundException("Could not delete, provided id: (%id) does not exist");
+            throw new PersonNotFoundException("Could not find a person with this id, it does not exist");
         } else {
             try {
                 em.getTransaction().begin();
@@ -100,7 +114,7 @@ public class PersonFacade implements IPersonFacade {
         EntityManager em = getEntityManager();
         Person p = em.find(Person.class, id);
          if (p == null) {
-                throw new PersonNotFoundException("Could not find a person with this id: (%id), it does not exist");
+                throw new PersonNotFoundException("Could not find a person with this id, it does not exist");
                 
             } else {
          try {
@@ -132,13 +146,21 @@ public class PersonFacade implements IPersonFacade {
 
     @Override
     public PersonDTO editPerson(PersonDTO p) throws PersonNotFoundException, MissingInputException {
+        if((p.getfName().length()== 0) || (p.getlName().length()== 0) || (p.getPhone().length() == 0)){
+        throw new MissingInputException("You have not filled out all det fields requierd for editing a person.");
+    }
         EntityManager em = getEntityManager();
         try {
             em.getTransaction().begin();
             Person person = em.find(Person.class, p.getId());
+            if (person == null){
+                throw new PersonNotFoundException("Could not find a person with this id: (%id), it does not exist");
+            }
             person.setFirstName(p.getfName());
             person.setLastName(p.getlName());
             person.setPhone(p.getPhone());
+            Address address = new Address(p.getStreet(),p.getCity(), p.getZip());
+            person.setAddress(address);
             person.setLastEdited(new Date());
             em.getTransaction().commit();
 

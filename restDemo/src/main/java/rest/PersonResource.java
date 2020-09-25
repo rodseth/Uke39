@@ -3,6 +3,7 @@ package rest;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import dto.PersonDTO;
+import exceptions.GenericException;
 import exceptions.MissingInputException;
 import exceptions.PersonNotFoundException;
 import utils.EMF_Creator;
@@ -45,9 +46,9 @@ public class PersonResource {
     @POST
     @Consumes({MediaType.APPLICATION_JSON})
     @Produces({MediaType.APPLICATION_JSON})
-    public String addPerson(String person) throws MissingInputException {
+    public String addPerson(String person) throws MissingInputException{
         PersonDTO p = GSON.fromJson(person, PersonDTO.class);
-        PersonDTO pAdd = FACADE.addPerson(p.getfName(), p.getlName(), p.getPhone());
+        PersonDTO pAdd = FACADE.addPerson(p.getfName(), p.getlName(), p.getPhone(), p.getStreet(), p.getCity(), p.getZip());
         
         return GSON.toJson(pAdd);
     }
@@ -55,7 +56,7 @@ public class PersonResource {
     @Path("delete/{id}")
     @DELETE
     @Produces({MediaType.APPLICATION_JSON})
-    public String deletePerson (@PathParam("id") int id) throws PersonNotFoundException {
+    public String deletePerson (@PathParam("id") int id) throws PersonNotFoundException{
         PersonDTO p = FACADE.deletePerson(id);
         
         return GSON.toJson(p);

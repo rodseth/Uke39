@@ -1,5 +1,6 @@
 package facades;
 
+import entities.Address;
 import entities.Person;
 import utils.EMF_Creator;
 import javax.persistence.EntityManager;
@@ -13,7 +14,7 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 //Uncomment the line below, to temporarily disable this test
-//@Disabled
+@Disabled
 public class PersonFacadeTest {
 
     private static EntityManagerFactory emf;
@@ -41,8 +42,8 @@ public class PersonFacadeTest {
         try {
             em.getTransaction().begin();
             em.createNamedQuery("Person.deleteAllRows").executeUpdate();
-            em.persist(new Person("Mari", "Haugen","97030434"));
-            em.persist(new Person("Frank", "vonSausage", "35535611"));
+            em.persist(new Person("Mari", "Haugen","97030434", new Address("Enevej 2", "Nexø", "3730")));
+            em.persist(new Person("Frank", "vonSausage", "35535611", new Address("Trevej 1", "Nexø", "3730")));
 
             em.getTransaction().commit();
         } finally {

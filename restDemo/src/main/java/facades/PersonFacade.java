@@ -3,6 +3,7 @@ package facades;
 import dto.PersonDTO;
 import dto.PersonsDTO;
 import entities.Person;
+import exceptions.MissingInputException;
 import exceptions.PersonNotFoundException;
 import java.util.Date;
 import java.util.List;
@@ -19,13 +20,13 @@ public class PersonFacade implements IPersonFacade {
 
     private static PersonFacade instance;
     private static EntityManagerFactory emf;
-    
+
     //Private Constructor to ensure Singleton
-    private PersonFacade() {}
-    
-    
+    private PersonFacade() {
+    }
+
     /**
-     * 
+     *
      * @param _emf
      * @return an instance of this facade class.
      */
@@ -40,22 +41,25 @@ public class PersonFacade implements IPersonFacade {
     private EntityManager getEntityManager() {
         return emf.createEntityManager();
     }
-    
+
     //TODO Remove/Change this before use
-    public long getPersonCount(){
+    public long getPersonCount() {
         EntityManager em = emf.createEntityManager();
-        try{
-            long personCount = (long)em.createQuery("SELECT COUNT(p) FROM Person p").getSingleResult();
+        try {
+            long personCount = (long) em.createQuery("SELECT COUNT(p) FROM Person p").getSingleResult();
             return personCount;
-        }finally{  
+        } finally {
             em.close();
         }
-        
+
     }
 
     @Override
-    public PersonDTO addPerson(String fName, String lName, String phone) {
-        
+    public PersonDTO addPerson(String fName, String lName, String phone) throws MissingInputException {
+        if((fName.length()== 0) || (lName.length()== 0) || (phone.length() == 0)){
+        throw new MissingInputException("You have not filled out all det fields requierd for adding a person.");
+    }
+
         EntityManager em = getEntityManager();
         Person person = new Person(fName, lName, phone);
         try {
@@ -63,61 +67,71 @@ public class PersonFacade implements IPersonFacade {
             em.persist(person);
             em.getTransaction().commit();
             PersonDTO pDTO = new PersonDTO(person);
-             return pDTO;
-            } finally {
+            return pDTO;
+        } finally {
             em.close();
-           
+
         }
-        
+
     }
 
     @Override
-    public PersonDTO deletePerson(int id) {
+    public PersonDTO deletePerson(int id) throws PersonNotFoundException {
         EntityManager em = getEntityManager();
-        try{
-            em.getTransaction().begin();
-            Person p = em.find(Person.class, id);
-            PersonDTO pDelete = new PersonDTO(p);
-            em.remove(p);
-            em.getTransaction().commit();
-            
-            return pDelete;
-        }finally{
-            em.close();
+        Person p = em.find(Person.class, id);
+        if (p == null) {
+            throw new PersonNotFoundException("Could not delete, provided id: (%id) does not exist");
+        } else {
+            try {
+                em.getTransaction().begin();
+                PersonDTO pDelete = new PersonDTO(p);
+                em.remove(p);
+                em.getTransaction().commit();
+
+                return pDelete;
+            } finally {
+                em.close();
+            }
         }
-        
     }
 
     @Override
     public PersonDTO getPerson(int id) throws PersonNotFoundException {
-            EntityManager em = getEntityManager();
-            Person p = em.find(Person.class, id);
-            if (p == null) {
-                throw new PersonNotFoundException("Kan ikke finne en person med dette id");
-            } else{
-             try {
-             PersonDTO pFind = new PersonDTO(p);
-             return pFind;
-        } finally {
-            em.close();
-        }
-     }
-    }
+        EntityManager em = getEntityManager();
+        Person p = em.find(Person.class, id);
+         if (p == null) {
+                throw new PersonNotFoundException("Could not find a person with this id: (%id), it does not exist");
+                
+            } else {
+         try {
             
+            PersonDTO pFind = new PersonDTO(p);
+           
+                return pFind;
+            
+         
+            }finally {
+                    em.close();
+                }
+        }
+    }
+
+    
+
 
     @Override
     public PersonsDTO getAllPersons() {
         EntityManager em = getEntityManager();
-        
-            TypedQuery<Person> query = em.createQuery("SELECT p FROM Person p", Person.class);
-            List<Person> persons = query.getResultList();
-            PersonsDTO allPersons =new PersonsDTO(persons);
-            
-            return allPersons;
+
+        TypedQuery<Person> query = em.createQuery("SELECT p FROM Person p", Person.class);
+        List<Person> persons = query.getResultList();
+        PersonsDTO allPersons = new PersonsDTO(persons);
+
+        return allPersons;
     }
 
     @Override
-    public PersonDTO editPerson(PersonDTO p) throws PersonNotFoundException {
+    public PersonDTO editPerson(PersonDTO p) throws PersonNotFoundException, MissingInputException {
         EntityManager em = getEntityManager();
         try {
             em.getTransaction().begin();
@@ -127,10 +141,10 @@ public class PersonFacade implements IPersonFacade {
             person.setPhone(p.getPhone());
             person.setLastEdited(new Date());
             em.getTransaction().commit();
-            
+
             return new PersonDTO(person);
-            
-        }finally {
+
+        } finally {
             em.close();
         }
     }

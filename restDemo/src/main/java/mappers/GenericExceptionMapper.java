@@ -12,10 +12,6 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
-/**
- *
- * @author MariHaugen
- */
 @Provider
 public class GenericExceptionMapper implements ExceptionMapper<Throwable> {
 

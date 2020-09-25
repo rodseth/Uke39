@@ -3,12 +3,10 @@ package rest;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import dto.PersonDTO;
-import dto.PersonsDTO;
+import exceptions.MissingInputException;
 import exceptions.PersonNotFoundException;
 import utils.EMF_Creator;
 import facades.PersonFacade;
-import java.util.List;
-import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -47,7 +45,7 @@ public class PersonResource {
     @POST
     @Consumes({MediaType.APPLICATION_JSON})
     @Produces({MediaType.APPLICATION_JSON})
-    public String addPerson(String person) {
+    public String addPerson(String person) throws MissingInputException {
         PersonDTO p = GSON.fromJson(person, PersonDTO.class);
         PersonDTO pAdd = FACADE.addPerson(p.getfName(), p.getlName(), p.getPhone());
         
@@ -57,7 +55,7 @@ public class PersonResource {
     @Path("delete/{id}")
     @DELETE
     @Produces({MediaType.APPLICATION_JSON})
-    public String deletePerson (@PathParam("id") int id) {
+    public String deletePerson (@PathParam("id") int id) throws PersonNotFoundException {
         PersonDTO p = FACADE.deletePerson(id);
         
         return GSON.toJson(p);
@@ -82,7 +80,7 @@ public class PersonResource {
     @PUT
     @Consumes({MediaType.APPLICATION_JSON})
     @Produces({MediaType.APPLICATION_JSON})
-    public String editPerson (String person) throws PersonNotFoundException {
+    public String editPerson (String person) throws PersonNotFoundException, MissingInputException {
         PersonDTO p = GSON.fromJson(person, PersonDTO.class);
         PersonDTO pUpdate = FACADE.editPerson(p);
                 
